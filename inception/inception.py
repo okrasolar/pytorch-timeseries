@@ -10,17 +10,6 @@ class InceptionModel(nn.Module):
     If a bottleneck channel is 0, then no bottleneck channel will be used
     """
 
-    @staticmethod
-    def _expand_to_blocks(value: Union[int, bool, List[int], List[bool]],
-                          num_blocks: int) -> Union[List[int], List[bool]]:
-        if isinstance(value, list):
-            assert len(value) == num_blocks, \
-                f'Length of inputs lists must be the same as num blocks, ' \
-                f'expected length {num_blocks}, got {len(value)}'
-        else:
-            value = [value] * num_blocks
-        return value
-
     def __init__(self, num_blocks: int, in_channels: int, out_channels: Union[List[int], int],
                  bottleneck_channels: Union[List[int], int], kernel_sizes: Union[List[int], int],
                  use_residuals: Union[List[bool], bool, str] = 'default', num_pred_classes: int = 1
@@ -43,6 +32,17 @@ class InceptionModel(nn.Module):
         # a global average pooling (i.e. mean of the time dimension) is why
         # in_features=channels[-1]
         self.linear = nn.Linear(in_features=channels[-1], out_features=num_pred_classes)
+
+    @staticmethod
+    def _expand_to_blocks(value: Union[int, bool, List[int], List[bool]],
+                          num_blocks: int) -> Union[List[int], List[bool]]:
+        if isinstance(value, list):
+            assert len(value) == num_blocks, \
+                f'Length of inputs lists must be the same as num blocks, ' \
+                f'expected length {num_blocks}, got {len(value)}'
+        else:
+            value = [value] * num_blocks
+        return value
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.blocks(x).mean(dim=-1)  # the mean is the global average pooling
