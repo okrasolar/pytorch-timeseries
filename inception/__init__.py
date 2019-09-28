@@ -1,3 +1,5 @@
 from .inception import InceptionModel
+from .trainer import Trainer
 
-__all__ = ['InceptionModel']
+
+__all__ = ['InceptionModel', 'Trainer']
