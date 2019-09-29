@@ -142,8 +142,6 @@ class Conv1dSamePadding(nn.Conv1d):
 
 def conv1d_same_padding(input, weight, bias=None, stride=1, dilation=1, groups=1):
     # stride and dilation are expected to be tuples.
-
-    # first, we'll figure out how much padding is necessary for the rows
     input_length = input.size(2)
     filter_length = weight.size(2)
     effective_filter_size_length = (filter_length - 1) * dilation[0] + 1

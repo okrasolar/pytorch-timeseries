@@ -103,7 +103,7 @@ class Trainer:
                         output, y_t.unsqueeze(-1).float(), reduction='mean'
                     )
                 else:
-                    train_loss = F.cross_entropy(output, y_t.long(), reduction='mean')
+                    train_loss = F.cross_entropy(output, y_t.argmax(dim=-1), reduction='mean')
 
                 epoch_train_loss.append(train_loss.item())
                 train_loss.backward()
@@ -120,7 +120,8 @@ class Trainer:
                             output, y_v.unsqueeze(-1).float(), reduction='mean'
                         ).item()
                     else:
-                        val_loss = F.cross_entropy(output, y_v.long(), reduction='mean').item()
+                        val_loss = F.cross_entropy(output,
+                                                   y_v.argmax(dim=-1), reduction='mean').item()
                     epoch_val_loss.append(val_loss)
             self.val_loss.append(np.mean(epoch_val_loss))
 
@@ -188,7 +189,7 @@ class Trainer:
     @staticmethod
     def _to_1d_binary(y_true: np.ndarray, y_preds: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         if len(y_true.shape) > 1:
-            return np.argmax(y_true), np.argmax(y_preds)
+            return np.argmax(y_true, axis=-1), np.argmax(y_preds, axis=-1)
 
         else:
             return y_true, (y_preds > 0.5).astype(int)
