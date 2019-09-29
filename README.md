@@ -5,6 +5,14 @@ time series classification.
 
 For more information, see the original [tensorflow implementation](https://github.com/hfawaz/InceptionTime).
 
+### Beyond the UCR/UEA archive
+There are two ways use the Inception Time model on your own data:
+
+1. Copy the [model](inception/inception.py), and write a new training loop for it
+2. Override `get_loaders` in the [trainer](inception/trainer.py) to return the appropriate 
+[dataloaders](https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader). This allows the training code
+(which handles both single and multi-class outputs) to be used.
+
 ### Setup
 
 [Anaconda](https://www.anaconda.com/download/#macos) running python 3.7 is used as the package manager. To get set up

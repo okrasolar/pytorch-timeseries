@@ -42,18 +42,6 @@ class Trainer:
 
         self.encoder: Optional[OneHotEncoder] = None
 
-    def _load_data(self) -> Tuple[InputData, InputData]:
-        assert self.experiment in UCR_DATASETS, \
-            f'{self.experiment} must be one of the UCR datasets: ' \
-            f'https://www.cs.ucr.edu/~eamonn/time_series_data/'
-        experiment_datapath = self.data_folder / 'UCR_TS_Archive_2015' / self.experiment
-        if self.encoder is None:
-            train, test, encoder = load_ucr_data(experiment_datapath)
-            self.encoder = encoder
-        else:
-            train, test, _ = load_ucr_data(experiment_datapath, encoder=self.encoder)
-        return train, test
-
     def fit(self, batch_size: int = 64, num_epochs: int = 100,
             val_size: float = 0.2, learning_rate: float = 0.01,
             patience: int = 10) -> None:
@@ -73,20 +61,7 @@ class Trainer:
             Maximum number of epochs to wait without improvement before
             early stopping
         """
-        train_data, _ = self._load_data()
-
-        train_data, val_data = train_data.split(val_size)
-
-        train_loader = DataLoader(
-            TensorDataset(train_data.x, train_data.y),
-            batch_size=batch_size,
-            shuffle=True,
-        )
-        val_loader = DataLoader(
-            TensorDataset(val_data.x, val_data.y),
-            batch_size=batch_size,
-            shuffle=False
-        )
+        train_loader, val_loader = self.get_loaders(batch_size, mode='train', val_size=val_size)
 
         optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
         best_val_loss = np.inf
@@ -141,13 +116,7 @@ class Trainer:
 
     def evaluate(self, batch_size: int = 64) -> None:
 
-        _, test = self._load_data()
-
-        test_loader = DataLoader(
-            TensorDataset(test.x, test.y),
-            batch_size=batch_size,
-            shuffle=False,
-        )
+        test_loader, _ = self.get_loaders(batch_size, mode='test')
 
         self.model.eval()
 
@@ -193,3 +162,62 @@ class Trainer:
 
         else:
             return y_true, (y_preds > 0.5).astype(int)
+
+    def get_loaders(self, batch_size: int, mode: str,
+                    val_size: Optional[float] = None) -> Tuple[DataLoader, Optional[DataLoader]]:
+        """
+        Return dataloaders of the training / test data
+
+        Arguments
+        ----------
+        batch_size:
+            The batch size each iteration of the dataloader should return
+        mode: {'train', 'test'}
+            If 'train', this function should return (train_loader, val_loader)
+            If 'test', it should return (test_loader, None)
+        val_size:
+            If mode == 'train', the fraction of training data to use for validation
+            Ignored if mode == 'test'
+
+        Returns
+        ----------
+        Tuple of (train_loader, val_loader) if mode == 'train'
+        Tuple of (test_loader, None) if mode == 'test'
+        """
+        train_data, test_data = self._load_data()
+
+        if mode == 'train':
+            assert val_size is not None, 'Val size must be defined when loading training data'
+            train_data, val_data = train_data.split(val_size)
+
+            train_loader = DataLoader(
+                TensorDataset(train_data.x, train_data.y),
+                batch_size=batch_size,
+                shuffle=True,
+            )
+            val_loader = DataLoader(
+                TensorDataset(val_data.x, val_data.y),
+                batch_size=batch_size,
+                shuffle=False
+            )
+
+            return train_loader, val_loader
+        else:
+            test_loader = DataLoader(
+                TensorDataset(test_data.x, test_data.y),
+                batch_size=batch_size,
+                shuffle=False,
+            )
+            return test_loader, None
+
+    def _load_data(self) -> Tuple[InputData, InputData]:
+        assert self.experiment in UCR_DATASETS, \
+            f'{self.experiment} must be one of the UCR datasets: ' \
+            f'https://www.cs.ucr.edu/~eamonn/time_series_data/'
+        experiment_datapath = self.data_folder / 'UCR_TS_Archive_2015' / self.experiment
+        if self.encoder is None:
+            train, test, encoder = load_ucr_data(experiment_datapath)
+            self.encoder = encoder
+        else:
+            train, test, _ = load_ucr_data(experiment_datapath, encoder=self.encoder)
+        return train, test
