@@ -2,7 +2,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-from typing import Union, List
+from typing import cast, Union, List
 
 
 class InceptionModel(nn.Module):
@@ -47,12 +47,14 @@ class InceptionModel(nn.Module):
             'num_pred_classes': num_pred_classes
         }
 
-        channels = [in_channels] + self._expand_to_blocks(out_channels, num_blocks)
-        bottleneck_channels = self._expand_to_blocks(bottleneck_channels, num_blocks)
-        kernel_sizes = self._expand_to_blocks(kernel_sizes, num_blocks)
+        channels = [in_channels] + cast(List[int], self._expand_to_blocks(out_channels, num_blocks))
+        bottleneck_channels = cast(List[int], self._expand_to_blocks(bottleneck_channels, num_blocks))
+        kernel_sizes = cast(List[int], self._expand_to_blocks(kernel_sizes, num_blocks))
         if use_residuals == 'default':
             use_residuals = [True if i % 3 == 2 else False for i in range(num_blocks)]
-        use_residuals = self._expand_to_blocks(use_residuals, num_blocks)
+        use_residuals = cast(List[bool], self._expand_to_blocks(
+            cast(Union[bool, List[bool]], use_residuals), num_blocks)
+        )
 
         self.blocks = nn.Sequential(*[
             InceptionBlock(in_channels=channels[i], out_channels=channels[i + 1],
@@ -75,7 +77,7 @@ class InceptionModel(nn.Module):
             value = [value] * num_blocks
         return value
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:  # type: ignore
         x = self.blocks(x).mean(dim=-1)  # the mean is the global average pooling
         return self.linear(x)
 
@@ -115,7 +117,7 @@ class InceptionBlock(nn.Module):
                 nn.ReLU()
             ])
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:  # type: ignore
         org_x = x
         if self.use_bottleneck:
             x = self.bottleneck(x)

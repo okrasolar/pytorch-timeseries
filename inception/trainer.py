@@ -99,14 +99,14 @@ class Trainer:
                 optimizer.zero_grad()
                 output = self.model(x_t)
                 if len(y_t.shape) == 1:
-                    loss = F.binary_cross_entropy_with_logits(
+                    train_loss = F.binary_cross_entropy_with_logits(
                         output, y_t.unsqueeze(-1).float(), reduction='mean'
                     )
                 else:
-                    loss = F.cross_entropy(output, y_t.long(), reduction='mean')
+                    train_loss = F.cross_entropy(output, y_t.long(), reduction='mean')
 
-                epoch_train_loss.append(loss.item())
-                loss.backward()
+                epoch_train_loss.append(train_loss.item())
+                train_loss.backward()
                 optimizer.step()
             self.train_loss.append(np.mean(epoch_train_loss))
 
@@ -116,12 +116,12 @@ class Trainer:
                 with torch.no_grad():
                     output = self.model(x_v)
                     if len(y_v.shape) == 1:
-                        loss = F.binary_cross_entropy_with_logits(
+                        val_loss = F.binary_cross_entropy_with_logits(
                             output, y_v.unsqueeze(-1).float(), reduction='mean'
                         ).item()
                     else:
-                        loss = F.cross_entropy(output, y_v.long(), reduction='mean').item()
-                    epoch_val_loss.append(loss)
+                        val_loss = F.cross_entropy(output, y_v.long(), reduction='mean').item()
+                    epoch_val_loss.append(val_loss)
             self.val_loss.append(np.mean(epoch_val_loss))
 
             print(f'Epoch: {epoch + 1}, '
