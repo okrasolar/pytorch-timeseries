@@ -14,6 +14,17 @@ from .data import InputData, load_ucr_data, UCR_DATASETS
 
 
 class Trainer:
+    """Trains an inception model
+
+    Attributes
+    ----------
+    model:
+        The initialized inception model
+    experiment:
+        The UCR/UEA dataset to train the model on
+    data_folder:
+        The location of the data_folder
+    """
 
     def __init__(self, model: nn.Module, experiment: str, data_folder: Path = Path('data')) -> None:
         self.model = model
@@ -46,6 +57,22 @@ class Trainer:
     def fit(self, batch_size: int = 64, num_epochs: int = 100,
             val_size: float = 0.2, learning_rate: float = 0.01,
             patience: int = 10) -> None:
+        """Trains the inception model
+
+        Arguments
+        ----------
+        batch_size:
+            Batch size to use for training and validation
+        num_epochs:
+            Maximum number of epochs to train for
+        val_size:
+            Fraction of training set to use for validation
+        learning_rate:
+            Learning rate to use with Adam optimizer
+        patience:
+            Maximum number of epochs to wait without improvement before
+            early stopping
+        """
         train_data, _ = self._load_data()
 
         train_data, val_data = train_data.split(val_size)

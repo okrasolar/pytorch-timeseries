@@ -6,8 +6,28 @@ from typing import Union, List
 
 
 class InceptionModel(nn.Module):
-    """
-    If a bottleneck channel is 0, then no bottleneck channel will be used
+    """A PyTorch implementation of the InceptionTime model.
+
+    Attributes
+    ----------
+    num_blocks:
+        The number of inception blocks to use. One inception block consists
+        of 3 convolutional layers, (optionally) a bottleneck and (optionally) a residual
+        connector
+    in_channels:
+        The number of input channels (i.e. input.shape[-1])
+    out_channels:
+        The number of "hidden channels" to use. Can be a list (for each block) or an
+        int, in which case the same value will be applied to each block
+    bottleneck_channels:
+        The number of channels to use for the bottleneck. Can be list or int. If 0, no
+        bottleneck is applied
+    kernel_sizes:
+        The size of the kernels to use for each inception block. Within each block, each
+        of the 3 convolutional layers will have kernel size
+        `[kernel_size // (2 ** i) for i in range(3)]`
+    num_pred_classes:
+        The number of output classes
     """
 
     def __init__(self, num_blocks: int, in_channels: int, out_channels: Union[List[int], int],
