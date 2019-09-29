@@ -16,11 +16,11 @@ def train_ecg():
 
     trainer = Trainer(model=model, experiment='ECG200', data_folder=data_folder)
     trainer.fit()
-    trainer.evaluate()
 
     savepath = trainer.save_model()
+    new_trainer = load_trainer(savepath)
+    new_trainer.evaluate()
 
-    load_trainer(savepath)
 
 if __name__ == '__main__':
     train_ecg()
