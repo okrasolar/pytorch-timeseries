@@ -1,12 +1,14 @@
 from pathlib import Path
 import numpy as np
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.metrics import roc_auc_score, accuracy_score
 
 import torch
 from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset
 
-from typing import List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 from .data import InputData, load_ucr_data, UCR_DATASETS
 
@@ -25,18 +27,26 @@ class Trainer:
         # to be filled by the fit function
         self.train_loss: List[float] = []
         self.val_loss: List[float] = []
+        self.test_results: Dict[str, float] = {}
 
-    def _load_experiment(self) -> Tuple[InputData, InputData]:
+        self.encoder: Optional[OneHotEncoder] = None
+
+    def _load_data(self) -> Tuple[InputData, InputData]:
         assert self.experiment in UCR_DATASETS, \
             f'{self.experiment} must be one of the UCR datasets: ' \
             f'https://www.cs.ucr.edu/~eamonn/time_series_data/'
         experiment_datapath = self.data_folder / 'UCR_TS_Archive_2015' / self.experiment
-        return load_ucr_data(experiment_datapath)
+        if self.encoder is None:
+            train, test, encoder = load_ucr_data(experiment_datapath)
+            self.encoder = encoder
+        else:
+            train, test, _ = load_ucr_data(experiment_datapath, encoder=self.encoder)
+        return train, test
 
     def fit(self, batch_size: int = 64, num_epochs: int = 100,
             val_size: float = 0.2, learning_rate: float = 0.01,
             patience: int = 10) -> None:
-        train_data, test_data = self._load_experiment()
+        train_data, _ = self._load_data()
 
         train_data, val_data = train_data.split(val_size)
 
@@ -100,3 +110,58 @@ class Trainer:
                 if patience_counter == patience:
                     print('Early stopping!')
                     return None
+
+    def evaluate(self, batch_size: int = 64) -> None:
+
+        _, test = self._load_data()
+
+        test_loader = DataLoader(
+            TensorDataset(test.x, test.y),
+            batch_size=batch_size,
+            shuffle=False,
+        )
+
+        self.model.eval()
+
+        true_list, preds_list = [], []
+        for x, y in test_loader:
+            with torch.no_grad():
+                true_list.append(y.detach().numpy())
+                preds = self.model(x)
+                if len(y.shape) == 1:
+                    preds = torch.sigmoid(preds)
+                else:
+                    preds = torch.softmax(preds, dim=-1)
+                preds_list.append(preds.detach().numpy())
+
+        true_np, preds_np = np.concatenate(true_list), np.concatenate(preds_list)
+
+        self.test_results['roc_auc_score'] = roc_auc_score(true_np, preds_np)
+        print(f'ROC AUC score: {round(self.test_results["roc_auc_score"], 3)}')
+
+        self.test_results['accuracy_score'] = accuracy_score(
+            *self._to_1d_binary(true_np, preds_np)
+        )
+        print(f'Accuracy score: {round(self.test_results["accuracy_score"], 3)}')
+
+    def save_model(self, savepath: Optional[Path] = None) -> Path:
+        save_dict = {
+            'model': {
+                'state_dict': self.model.state_dict(),
+                'input_args': self.model.input_args,
+            },
+            'encoder': self.encoder
+        }
+        if savepath is None:
+            savepath = self.model_dir / 'model.pkl'
+        torch.save(save_dict, savepath)
+
+        return savepath
+
+    @staticmethod
+    def _to_1d_binary(y_true: np.ndarray, y_preds: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        if len(y_true.shape) > 1:
+            return np.argmax(y_true), np.argmax(y_preds)
+
+        else:
+            return y_true, (y_preds > 0.5).astype(int)

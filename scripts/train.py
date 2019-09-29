@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 sys.path.append('..')
 
-from inception import InceptionModel, Trainer
+from inception import InceptionModel, Trainer, load_trainer
 
 
 def train_ecg():
@@ -16,7 +16,11 @@ def train_ecg():
 
     trainer = Trainer(model=model, experiment='ECG200', data_folder=data_folder)
     trainer.fit()
+    trainer.evaluate()
 
+    savepath = trainer.save_model()
+
+    load_trainer(savepath)
 
 if __name__ == '__main__':
     train_ecg()

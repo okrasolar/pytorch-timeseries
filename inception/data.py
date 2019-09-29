@@ -6,7 +6,7 @@ import torch
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
 
-from typing import Tuple
+from typing import Tuple, Optional
 
 
 @dataclass
@@ -46,15 +46,20 @@ UCR_DATASETS = ['Haptics', 'Worms', 'Computers', 'UWaveGestureLibraryAll',
                 'DiatomSizeReduction', 'ProximalPhalanxTW']
 
 
-def load_ucr_data(data_path: Path) -> Tuple[InputData, InputData]:
+def load_ucr_data(data_path: Path,
+                  encoder: Optional[OneHotEncoder] = None
+                  ) -> Tuple[InputData, InputData, OneHotEncoder]:
 
     experiment = data_path.parts[-1]
 
     train = np.loadtxt(data_path / f'{experiment}_TRAIN', delimiter=',')
     test = np.loadtxt(data_path / f'{experiment}_TEST', delimiter=',')
 
-    encoder = OneHotEncoder(categories='auto', sparse=False)
-    y_train = encoder.fit_transform(np.expand_dims(train[:, 0], axis=-1))
+    if encoder is None:
+        encoder = OneHotEncoder(categories='auto', sparse=False)
+        y_train = encoder.fit_transform(np.expand_dims(train[:, 0], axis=-1))
+    else:
+        y_train = encoder.transform(np.expand_dims(train[:, 0], axis=-1))
     y_test = encoder.transform(np.expand_dims(test[:, 0], axis=-1))
 
     if y_train.shape[1] == 2:
@@ -70,4 +75,4 @@ def load_ucr_data(data_path: Path) -> Tuple[InputData, InputData]:
                             y=torch.from_numpy(y_train))
     test_input = InputData(x=torch.from_numpy(test[:, 1:]).unsqueeze(1).float(),
                            y=torch.from_numpy(y_test))
-    return train_input, test_input
+    return train_input, test_input, encoder

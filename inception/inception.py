@@ -16,6 +16,17 @@ class InceptionModel(nn.Module):
                  ) -> None:
         super().__init__()
 
+        # for easier saving and loading
+        self.input_args = {
+            'num_blocks': num_blocks,
+            'in_channels': in_channels,
+            'out_channels': out_channels,
+            'bottleneck_channels': bottleneck_channels,
+            'kernel_sizes': kernel_sizes,
+            'use_residuals': use_residuals,
+            'num_pred_classes': num_pred_classes
+        }
+
         channels = [in_channels] + self._expand_to_blocks(out_channels, num_blocks)
         bottleneck_channels = self._expand_to_blocks(bottleneck_channels, num_blocks)
         kernel_sizes = self._expand_to_blocks(kernel_sizes, num_blocks)
