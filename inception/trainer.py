@@ -7,7 +7,7 @@ from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
-from typing import Any, Dict, List, Tuple, Optional
+from typing import cast, Any, Dict, List, Tuple, Optional
 
 
 class BaseTrainer:
@@ -65,6 +65,7 @@ class BaseTrainer:
         optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
         best_val_loss = np.inf
         patience_counter = 0
+        best_state_dict = None
 
         self.model.train()
         for epoch in range(num_epochs):
@@ -86,7 +87,7 @@ class BaseTrainer:
 
             epoch_val_loss = []
             self.model.eval()
-            for x_v, y_v in val_loader:
+            for x_v, y_v in cast(DataLoader, val_loader):
                 with torch.no_grad():
                     output = self.model(x_v)
                     if len(y_v.shape) == 1:
@@ -105,11 +106,14 @@ class BaseTrainer:
 
             if self.val_loss[-1] < best_val_loss:
                 best_val_loss = self.val_loss[-1]
+                best_state_dict = self.model.state_dict()
                 patience_counter = 0
             else:
                 patience_counter += 1
 
                 if patience_counter == patience:
+                    if best_state_dict is not None:
+                        self.model.load_state_dict(cast(Dict[str, torch.Tensor], best_state_dict))
                     print('Early stopping!')
                     return None
 

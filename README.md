@@ -21,7 +21,7 @@ with an environment, install Anaconda from the link above, and (from this direct
 ```bash
 conda env create -f environment.yml
 ```
-This will create an environment named `crop_yield_prediction` with all the necessary packages to run the code. To 
+This will create an environment named `inception` with all the necessary packages to run the code. To 
 activate this environment, run
 
 ```bash
