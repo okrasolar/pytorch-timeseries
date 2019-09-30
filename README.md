@@ -9,9 +9,9 @@ For more information, see the original [tensorflow implementation](https://githu
 There are two ways use the Inception Time model on your own data:
 
 1. Copy the [model](inception/inception.py), and write a new training loop for it
-2. Override `get_loaders` in the [trainer](inception/trainer.py) to return the appropriate 
-[dataloaders](https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader). This allows the training code
-(which handles both single and multi-class outputs) to be used.
+2. Extend the [base trainer](inception/trainer.py) by implementing an initializer, `get_loaders` and `save`. 
+This allows the training code (which handles both single and multi-class outputs) to be used - an example of this is
+the [`UCRTrainer`](inception/ucr.py).
 
 ### Setup
 

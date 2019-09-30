@@ -1,9 +1,16 @@
-from pathlib import Path
+"""
+Example scripts demonstrating how the UCRTrainer, which extends the BaseTrainer,
+can be used to train an Inception Model on UCR Archive data.
 
+The ECG200 dataset has 1 output class, while the Synthetic Control dataset has
+6 - in the case of ECG, a sigmoid function is used as the final activation function.
+For the Synthetic Control dataset, softmax is used instead.
+"""
+from pathlib import Path
 import sys
 sys.path.append('..')
 
-from inception import InceptionModel, Trainer, load_trainer
+from inception import InceptionModel, UCRTrainer, load_ucr_trainer
 
 
 def train_ecg():
@@ -14,11 +21,11 @@ def train_ecg():
                            bottleneck_channels=2, kernel_sizes=41, use_residuals=True,
                            num_pred_classes=1)
 
-    trainer = Trainer(model=model, experiment='ECG200', data_folder=data_folder)
+    trainer = UCRTrainer(model=model, experiment='ECG200', data_folder=data_folder)
     trainer.fit()
 
     savepath = trainer.save_model()
-    new_trainer = load_trainer(savepath)
+    new_trainer = load_ucr_trainer(savepath)
     new_trainer.evaluate()
 
 
@@ -30,11 +37,11 @@ def train_sc():
                            bottleneck_channels=2, kernel_sizes=41, use_residuals=True,
                            num_pred_classes=6)
 
-    trainer = Trainer(model=model, experiment='synthetic_control', data_folder=data_folder)
+    trainer = UCRTrainer(model=model, experiment='synthetic_control', data_folder=data_folder)
     trainer.fit()
 
     savepath = trainer.save_model()
-    new_trainer = load_trainer(savepath)
+    new_trainer = load_ucr_trainer(savepath)
     new_trainer.evaluate()
 
 

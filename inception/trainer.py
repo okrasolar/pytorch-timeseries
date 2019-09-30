@@ -1,47 +1,42 @@
 from pathlib import Path
 import numpy as np
-from sklearn.preprocessing import OneHotEncoder
 from sklearn.metrics import roc_auc_score, accuracy_score
 
 import torch
 from torch import nn
 import torch.nn.functional as F
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader
 
-from typing import Dict, List, Tuple, Optional
-
-from .data import InputData, load_ucr_data, UCR_DATASETS
+from typing import Any, Dict, List, Tuple, Optional
 
 
-class Trainer:
-    """Trains an inception model
+class BaseTrainer:
+    """Trains an inception model. Dataset-specific trainers should extend this class
+    and implement __init__, get_loaders and save functions.
+    See UCRTrainer in .ucr.py for an example.
 
     Attributes
     ----------
     model:
         The initialized inception model
-    experiment:
-        The UCR/UEA dataset to train the model on
     data_folder:
-        The location of the data_folder
+        A path to the data folder - get_loaders should look here for the data
+    model_dir:
+        A path to where the model and its predictions should be saved
+    train_loss:
+        The fit function fills this list in as the model trains. Useful for plotting
+    val_loss:
+        The fit function fills this list in as the model trains. Useful for plotting
+    test_results:
+        The evaluate function fills this in, evaluating the model on the test data
     """
-
-    def __init__(self, model: nn.Module, experiment: str,
-                 data_folder: Path = Path('data')) -> None:
-        self.model = model
-
-        self.experiment = experiment
-        self.data_folder = data_folder
-
-        self.model_dir = data_folder / 'models' / self.model.__class__.__name__ / experiment
-        self.model_dir.mkdir(parents=True, exist_ok=True)
-
-        # to be filled by the fit function
-        self.train_loss: List[float] = []
-        self.val_loss: List[float] = []
-        self.test_results: Dict[str, float] = {}
-
-        self.encoder: Optional[OneHotEncoder] = None
+    model: nn.Module
+    data_folder: Path
+    model_dir: Path
+    train_loss: List[float] = []
+    val_loss: List[float] = []
+    test_results: Dict[str, float] = {}
+    input_args: Dict[str, Any] = {}
 
     def fit(self, batch_size: int = 64, num_epochs: int = 100,
             val_size: float = 0.2, learning_rate: float = 0.01,
@@ -142,20 +137,6 @@ class Trainer:
         )
         print(f'Accuracy score: {round(self.test_results["accuracy_score"], 3)}')
 
-    def save_model(self, savepath: Optional[Path] = None) -> Path:
-        save_dict = {
-            'model': {
-                'state_dict': self.model.state_dict(),
-                'input_args': self.model.input_args,
-            },
-            'encoder': self.encoder
-        }
-        if savepath is None:
-            savepath = self.model_dir / 'model.pkl'
-        torch.save(save_dict, savepath)
-
-        return savepath
-
     @staticmethod
     def _to_1d_binary(y_true: np.ndarray, y_preds: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         if len(y_true.shape) > 1:
@@ -185,40 +166,7 @@ class Trainer:
         Tuple of (train_loader, val_loader) if mode == 'train'
         Tuple of (test_loader, None) if mode == 'test'
         """
-        train_data, test_data = self._load_data()
+        raise NotImplementedError
 
-        if mode == 'train':
-            assert val_size is not None, 'Val size must be defined when loading training data'
-            train_data, val_data = train_data.split(val_size)
-
-            train_loader = DataLoader(
-                TensorDataset(train_data.x, train_data.y),
-                batch_size=batch_size,
-                shuffle=True,
-            )
-            val_loader = DataLoader(
-                TensorDataset(val_data.x, val_data.y),
-                batch_size=batch_size,
-                shuffle=False
-            )
-
-            return train_loader, val_loader
-        else:
-            test_loader = DataLoader(
-                TensorDataset(test_data.x, test_data.y),
-                batch_size=batch_size,
-                shuffle=False,
-            )
-            return test_loader, None
-
-    def _load_data(self) -> Tuple[InputData, InputData]:
-        assert self.experiment in UCR_DATASETS, \
-            f'{self.experiment} must be one of the UCR datasets: ' \
-            f'https://www.cs.ucr.edu/~eamonn/time_series_data/'
-        experiment_datapath = self.data_folder / 'UCR_TS_Archive_2015' / self.experiment
-        if self.encoder is None:
-            train, test, encoder = load_ucr_data(experiment_datapath)
-            self.encoder = encoder
-        else:
-            train, test, _ = load_ucr_data(experiment_datapath, encoder=self.encoder)
-        return train, test
+    def save_model(self, savepath: Optional[Path] = None) -> Path:
+        raise NotImplementedError

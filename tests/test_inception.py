@@ -1,7 +1,47 @@
 import torch
 import pytest
 
-from inception.inception import Conv1dSamePadding, InceptionBlock
+from inception.inception import Conv1dSamePadding, InceptionBlock, InceptionModel
+
+
+class TestInceptionModel:
+
+    def test_model_works_with_scalar_inputs(self):
+        batch_size, num_blocks, in_channels, pred_classes = 100, 3, 32, 12
+
+        input_tensor = torch.ones(100, in_channels, 50)
+
+        model = InceptionModel(num_blocks, in_channels, out_channels=30,
+                               bottleneck_channels=12, kernel_sizes=15,
+                               use_residuals=True, num_pred_classes=pred_classes)
+
+        preds = model(input_tensor)
+        assert preds.shape == (batch_size, pred_classes)
+
+    def test_model_works_with_list_inputs(self):
+        batch_size, num_blocks, in_channels, pred_classes = 100, 2, 32, 12
+
+        input_tensor = torch.ones(100, in_channels, 50)
+
+        model = InceptionModel(num_blocks, in_channels, out_channels=[30, 25],
+                               bottleneck_channels=[12, 0], kernel_sizes=[15, 12],
+                               use_residuals=[True, False], num_pred_classes=pred_classes)
+
+        preds = model(input_tensor)
+        assert preds.shape == (batch_size, pred_classes)
+
+    def test_model_catches_incorrect_inputs(self):
+        num_blocks, in_channels, pred_classes = 2, 32, 12
+
+        with pytest.raises(AssertionError) as e:
+            InceptionModel(num_blocks, in_channels, out_channels=[30, 25, 75],
+                           bottleneck_channels=[12, 0], kernel_sizes=[15, 12],
+                           use_residuals=[True, False], num_pred_classes=pred_classes)
+
+        # make sure we get the right error message
+        expected = 'Length of inputs lists must be the same as num blocks, ' \
+                   'expected length 2, got 3'
+        assert str(e.value) == expected
 
 
 class TestInceptionBlock:
