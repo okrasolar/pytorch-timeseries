@@ -17,12 +17,15 @@ class BaseTrainer:
 
     Attributes
     ----------
+    The following need to be added by the initializer:
     model:
         The initialized inception model
     data_folder:
         A path to the data folder - get_loaders should look here for the data
     model_dir:
         A path to where the model and its predictions should be saved
+
+    The following don't:
     train_loss:
         The fit function fills this list in as the model trains. Useful for plotting
     val_loss:
