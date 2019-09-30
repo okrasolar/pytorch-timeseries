@@ -15,7 +15,7 @@ class InputData:
     y: torch.Tensor
 
     def split(self, split_size: float) -> Tuple[InputData, InputData]:
-        train_x, val_x, train_y, val_y  = train_test_split(
+        train_x, val_x, train_y, val_y = train_test_split(
             self.x.numpy(), self.y.numpy(), test_size=split_size, stratify=self.y
         )
         return (InputData(x=torch.from_numpy(train_x), y=torch.from_numpy(train_y)),

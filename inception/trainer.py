@@ -26,7 +26,8 @@ class Trainer:
         The location of the data_folder
     """
 
-    def __init__(self, model: nn.Module, experiment: str, data_folder: Path = Path('data')) -> None:
+    def __init__(self, model: nn.Module, experiment: str,
+                 data_folder: Path = Path('data')) -> None:
         self.model = model
 
         self.experiment = experiment

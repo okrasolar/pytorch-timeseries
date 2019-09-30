@@ -32,7 +32,8 @@ class InceptionModel(nn.Module):
 
     def __init__(self, num_blocks: int, in_channels: int, out_channels: Union[List[int], int],
                  bottleneck_channels: Union[List[int], int], kernel_sizes: Union[List[int], int],
-                 use_residuals: Union[List[bool], bool, str] = 'default', num_pred_classes: int = 1
+                 use_residuals: Union[List[bool], bool, str] = 'default',
+                 num_pred_classes: int = 1
                  ) -> None:
         super().__init__()
 
@@ -47,8 +48,10 @@ class InceptionModel(nn.Module):
             'num_pred_classes': num_pred_classes
         }
 
-        channels = [in_channels] + cast(List[int], self._expand_to_blocks(out_channels, num_blocks))
-        bottleneck_channels = cast(List[int], self._expand_to_blocks(bottleneck_channels, num_blocks))
+        channels = [in_channels] + cast(List[int], self._expand_to_blocks(out_channels,
+                                                                          num_blocks))
+        bottleneck_channels = cast(List[int], self._expand_to_blocks(bottleneck_channels,
+                                                                     num_blocks))
         kernel_sizes = cast(List[int], self._expand_to_blocks(kernel_sizes, num_blocks))
         if use_residuals == 'default':
             use_residuals = [True if i % 3 == 2 else False for i in range(num_blocks)]
@@ -94,11 +97,11 @@ class InceptionBlock(nn.Module):
 
         self.use_bottleneck = bottleneck_channels > 0
         if self.use_bottleneck:
-            self.bottleneck = Conv1dSamePadding(in_channels, bottleneck_channels, kernel_size=1,
-                                                bias=False)
+            self.bottleneck = Conv1dSamePadding(in_channels, bottleneck_channels,
+                                                kernel_size=1, bias=False)
         kernel_size_s = [kernel_size // (2 ** i) for i in range(3)]
-        channels = [bottleneck_channels] + [out_channels] * 3
-
+        start_channels = bottleneck_channels if self.use_bottleneck else in_channels
+        channels = [start_channels] + [out_channels] * 3
         self.conv_layers = nn.Sequential(*[
             Conv1dSamePadding(in_channels=channels[i], out_channels=channels[i + 1],
                               kernel_size=kernel_size_s[i], stride=stride, bias=False)
@@ -131,8 +134,6 @@ class InceptionBlock(nn.Module):
 class Conv1dSamePadding(nn.Conv1d):
     """Represents the "Same" padding functionality from Tensorflow.
     See: https://github.com/pytorch/pytorch/issues/3867
-    This solution is mostly copied from
-    https://github.com/pytorch/pytorch/issues/3867#issuecomment-349279036
     Note that the padding argument in the initializer doesn't do anything now
     """
     def forward(self, input):
@@ -140,18 +141,14 @@ class Conv1dSamePadding(nn.Conv1d):
                                    self.dilation, self.groups)
 
 
-def conv1d_same_padding(input, weight, bias=None, stride=1, dilation=1, groups=1):
+def conv1d_same_padding(input, weight, bias, stride, dilation, groups):
     # stride and dilation are expected to be tuples.
-    input_length = input.size(2)
-    filter_length = weight.size(2)
-    effective_filter_size_length = (filter_length - 1) * dilation[0] + 1
-    out_length = (input_length + stride[0] - 1) // stride[0]
-    padding_length = max(0, (out_length - 1) * stride[0] + effective_filter_size_length - input_length)
-    length_odd = (padding_length % 2 != 0)
+    kernel, dilation, stride = weight.size(2), dilation[0], stride[0]
+    l_out = l_in = input.size(2)
+    padding = (((l_out - 1) * stride) - l_in + (dilation * (kernel - 1)) + 1)
+    if padding % 2 != 0:
+        input = F.pad(input, [0, 1])
 
-    if length_odd:
-        input = F.pad(input, [0, int(length_odd)])
-
-    return F.conv1d(input, weight, bias, stride,
-                    padding=padding_length // 2,
+    return F.conv1d(input=input, weight=weight, bias=bias, stride=stride,
+                    padding=padding // 2,
                     dilation=dilation, groups=groups)
