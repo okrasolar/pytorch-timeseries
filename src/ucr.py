@@ -9,8 +9,8 @@ from sklearn.model_selection import train_test_split
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
+from src import models
 from .trainer import BaseTrainer
-from .inception import InceptionModel
 
 from typing import Dict, List, Tuple, Optional
 
@@ -176,6 +176,7 @@ class UCRTrainer(BaseTrainer):
     def save_model(self, savepath: Optional[Path] = None) -> Path:
         save_dict = {
             'model': {
+                'model_class': self.model.__class__.__name__,
                 'state_dict': self.model.state_dict(),
                 'input_args': self.model.input_args,
             },
@@ -195,7 +196,8 @@ def load_ucr_trainer(model_path: Path) -> UCRTrainer:
 
     model_dict = torch.load(model_path)
 
-    model = InceptionModel(**model_dict['model']['input_args'])
+    model_class = getattr(models, model_dict['model']['model_class'])
+    model = model_class(**model_dict['model']['input_args'])
     model.load_state_dict(model_dict['model']['state_dict'])
 
     loaded_trainer = UCRTrainer(model, experiment=experiment,

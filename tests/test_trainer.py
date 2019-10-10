@@ -6,8 +6,8 @@ from torch.utils.data import TensorDataset, DataLoader
 
 import pytest
 
-from inception import InceptionModel
-from inception.trainer import BaseTrainer
+from src import InceptionModel
+from src.trainer import BaseTrainer
 
 from typing import Optional, Tuple
 

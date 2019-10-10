@@ -1,7 +1,7 @@
 import torch
 import pytest
 
-from inception.inception import Conv1dSamePadding, InceptionBlock, InceptionModel
+from src.models.inception import Conv1dSamePadding, InceptionBlock, InceptionModel
 
 
 class TestInceptionModel:

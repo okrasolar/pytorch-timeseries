@@ -10,7 +10,7 @@ from pathlib import Path
 import sys
 sys.path.append('..')
 
-from inception import InceptionModel, UCRTrainer, load_ucr_trainer
+from src import InceptionModel, UCRTrainer, load_ucr_trainer
 
 
 def train_ecg():
