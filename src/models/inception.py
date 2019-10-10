@@ -7,6 +7,7 @@ from typing import cast, Union, List
 
 class InceptionModel(nn.Module):
     """A PyTorch implementation of the InceptionTime model.
+    From https://arxiv.org/abs/1909.04939
 
     Attributes
     ----------

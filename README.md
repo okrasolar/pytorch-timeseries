@@ -8,7 +8,7 @@ For more information, see the original [tensorflow implementation](https://githu
 ### Beyond the UCR/UEA archive
 There are two ways use the Inception Time model on your own data:
 
-1. Copy the [model](src/inception.py), and write a new training loop for it
+1. Copy the [model](src/models/inception.py), and write a new training loop for it
 2. Extend the [base trainer](src/trainer.py) by implementing an initializer, `get_loaders` and `save`. 
 This allows the training code (which handles both single and multi-class outputs) to be used - an example of this is
 the [`UCRTrainer`](src/ucr.py).

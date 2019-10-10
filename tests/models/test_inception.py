@@ -9,7 +9,7 @@ class TestInceptionModel:
     def test_model_works_with_scalar_inputs(self):
         batch_size, num_blocks, in_channels, pred_classes = 100, 3, 32, 12
 
-        input_tensor = torch.ones(100, in_channels, 50)
+        input_tensor = torch.ones(batch_size, in_channels, 50)
 
         model = InceptionModel(num_blocks, in_channels, out_channels=30,
                                bottleneck_channels=12, kernel_sizes=15,
@@ -21,7 +21,7 @@ class TestInceptionModel:
     def test_model_works_with_list_inputs(self):
         batch_size, num_blocks, in_channels, pred_classes = 100, 2, 32, 12
 
-        input_tensor = torch.ones(100, in_channels, 50)
+        input_tensor = torch.ones(batch_size, in_channels, 50)
 
         model = InceptionModel(num_blocks, in_channels, out_channels=[30, 25],
                                bottleneck_channels=[12, 0], kernel_sizes=[15, 12],

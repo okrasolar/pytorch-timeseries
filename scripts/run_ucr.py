@@ -10,10 +10,11 @@ from pathlib import Path
 import sys
 sys.path.append('..')
 
-from src import InceptionModel, UCRTrainer, load_ucr_trainer
+from src import UCRTrainer, load_ucr_trainer
+from src.models import InceptionModel, LinearBaseline
 
 
-def train_ecg():
+def train_inception_ecg():
 
     data_folder = Path('../data')
 
@@ -29,7 +30,21 @@ def train_ecg():
     new_trainer.evaluate()
 
 
-def train_sc():
+def train_linear_ecg():
+
+    data_folder = Path('../data')
+
+    model = LinearBaseline(num_inputs=96, num_pred_classes=1)
+
+    trainer = UCRTrainer(model=model, experiment='ECG200', data_folder=data_folder)
+    trainer.fit()
+
+    savepath = trainer.save_model()
+    new_trainer = load_ucr_trainer(savepath)
+    new_trainer.evaluate()
+
+
+def train_inception_sc():
 
     data_folder = Path('../data')
 
@@ -46,4 +61,4 @@ def train_sc():
 
 
 if __name__ == '__main__':
-    train_sc()
+    train_linear_ecg()

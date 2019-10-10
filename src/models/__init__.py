@@ -1,4 +1,5 @@
 from .inception import InceptionModel
+from .linear_baseline import LinearBaseline
 
 
-__all__ = ['InceptionModel']
+__all__ = ['InceptionModel', 'LinearBaseline']
