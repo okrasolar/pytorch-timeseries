@@ -183,7 +183,8 @@ class UCRTrainer(BaseTrainer):
             'encoder': self.encoder
         }
         if savepath is None:
-            savepath = self.model_dir / 'model.pkl'
+            model_name = f'{self.model.__class__.__name__}_{self.experiment}_model.pkl'
+            savepath = self.model_dir / model_name
         torch.save(save_dict, savepath)
 
         return savepath

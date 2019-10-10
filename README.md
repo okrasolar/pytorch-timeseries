@@ -1,14 +1,15 @@
-# inception-time-pytorch
+# pytorch-timeseries
 
-A PyTorch implementation of [InceptionTime](https://arxiv.org/pdf/1909.04939.pdf), a convolutional neural network for
-time series classification.
+PyTorch implementations of deep neural neural nets for time series classification.
 
-For more information, see the original [tensorflow implementation](https://github.com/hfawaz/InceptionTime).
+Currently, the following papers are implemented:
+* [InceptionTime: Finding AlexNet for Time Series Classification](https://arxiv.org/abs/1909.04939)
+* [Time Series Classification from Scratch with Deep Neural Networks: A Strong Baseline](https://arxiv.org/abs/1611.06455)
 
 ### Beyond the UCR/UEA archive
 There are two ways use the Inception Time model on your own data:
 
-1. Copy the [model](src/models/inception.py), and write a new training loop for it
+1. Copy the [models](src/models), and write new training loops
 2. Extend the [base trainer](src/trainer.py) by implementing an initializer, `get_loaders` and `save`. 
 This allows the training code (which handles both single and multi-class outputs) to be used - an example of this is
 the [`UCRTrainer`](src/ucr.py).

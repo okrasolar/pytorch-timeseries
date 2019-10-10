@@ -6,13 +6,13 @@ from torch.utils.data import TensorDataset, DataLoader
 
 import pytest
 
-from src import InceptionModel
+from src.models import InceptionModel
 from src.trainer import BaseTrainer
 
 from typing import Optional, Tuple
 
 
-class TestTrainer(BaseTrainer):
+class TrainerForTests(BaseTrainer):
     """A complete trainer class, to test the base trainer's
     functions
     """
@@ -54,6 +54,6 @@ class TestBaseTrainer:
                                bottleneck_channels=12, kernel_sizes=15,
                                use_residuals=True, num_pred_classes=num_pred_classes)
 
-        trainer = TestTrainer(model, tmp_path, in_channels, num_preds=num_pred_classes)
+        trainer = TrainerForTests(model, tmp_path, in_channels, num_preds=num_pred_classes)
         # this just ensures everything runs
         trainer.fit(batch_size=50, num_epochs=1)

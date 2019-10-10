@@ -11,7 +11,7 @@ import sys
 sys.path.append('..')
 
 from src import UCRTrainer, load_ucr_trainer
-from src.models import InceptionModel, LinearBaseline
+from src.models import InceptionModel, LinearBaseline, FCNBaseline, ResNetBaseline
 
 
 def train_inception_ecg():
@@ -44,6 +44,35 @@ def train_linear_ecg():
     new_trainer.evaluate()
 
 
+def train_fcn_ecg():
+
+    data_folder = Path('../data')
+
+    model = FCNBaseline(in_channels=1, num_pred_classes=1)
+
+    trainer = UCRTrainer(model=model, experiment='ECG200', data_folder=data_folder)
+    trainer.fit()
+
+    savepath = trainer.save_model()
+    new_trainer = load_ucr_trainer(savepath)
+    new_trainer.evaluate()
+
+
+def train_resnet_ecg():
+
+    data_folder = Path('../data')
+
+    model = ResNetBaseline(in_channels=1, num_pred_classes=1)
+
+    trainer = UCRTrainer(model=model, experiment='ECG200', data_folder=data_folder)
+    trainer.fit()
+
+    savepath = trainer.save_model()
+    new_trainer = load_ucr_trainer(savepath)
+    new_trainer.evaluate()
+
+
+
 def train_inception_sc():
 
     data_folder = Path('../data')
@@ -61,4 +90,7 @@ def train_inception_sc():
 
 
 if __name__ == '__main__':
+    train_inception_ecg()
     train_linear_ecg()
+    train_fcn_ecg()
+    train_resnet_ecg()
