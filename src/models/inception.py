@@ -95,6 +95,7 @@ class InceptionBlock(nn.Module):
     def __init__(self, in_channels: int, out_channels: int,
                  residual: bool, stride: int = 1, bottleneck_channels: int = 32,
                  kernel_size: int = 41) -> None:
+        assert kernel_size > 3, "Kernel size must be strictly greater than 3"
         super().__init__()
 
         self.use_bottleneck = bottleneck_channels > 0
